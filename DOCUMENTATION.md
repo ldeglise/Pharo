@@ -226,7 +226,7 @@ sudo apt install python3-tk
 ## Lancement
 
 ```bash
-cd phare_visualiseur
+cd <pharo>
 python main.py
 ```
 
