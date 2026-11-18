@@ -9,14 +9,9 @@ permissions:
   contents: write
 
 jobs:
-  build:
-    name: Build (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
+  build-windows:
+    name: Build (Windows)
+    runs-on: windows-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,11 +21,35 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install Tk (Linux)
-        if: runner.os == 'Linux'
+      - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-tk
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build binary
+        run: pyinstaller --onefile --windowed --clean --name pharo-windows main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-windows
+          path: dist/pharo-windows*
+          if-no-files-found: error
+
+  build-linux:
+    name: Build (Linux)
+    runs-on: ubuntu-latest
+    container:
+      image: python:3.12-slim-bullseye
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Tk runtime
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends libtk8.6 libtcl8.6
 
       - name: Install dependencies
         run: |
@@ -38,44 +57,58 @@ jobs:
           pip install -r requirements.txt
           pip install pyinstaller
 
-      - name: Build binary (Windows)
-        if: runner.os == 'Windows'
-        run: pyinstaller --onefile --windowed --clean --name pharo-windows main.py
-
-      - name: Build binary (Linux)
-        if: runner.os == 'Linux'
+      - name: Build binary
         run: pyinstaller --onefile --windowed --clean --name pharo-linux main.py
 
-      - name: Build binary (macOS)
-        if: runner.os == 'macOS'
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries-linux
+          path: dist/pharo-linux*
+          if-no-files-found: error
+
+  build-macos:
+    name: Build (macOS)
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build binary
         run: pyinstaller --onefile --windowed --clean --name pharo-macos main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-binary
-          path: |
-            dist/pharo-windows*
-            dist/pharo-linux*
-            dist/pharo-macos*
+          name: binaries-macos
+          path: dist/pharo-macos*
           if-no-files-found: error
 
   release:
     name: Attach binaries to GitHub Release
-    needs: build
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: binaries-*
           path: artifacts
 
       - name: Create GitHub Release and upload binaries
         uses: softprops/action-gh-release@v2
         with:
-          files: |
-            artifacts/ubuntu-latest-binary/*
-            artifacts/windows-latest-binary/*
-            artifacts/macos-latest-binary/*
+          files: artifacts/**/pharo-*
           draft: false
           prerelease: ${{ contains(github.ref, '-rc') || contains(github.ref, '-beta') || contains(github.ref, '-alpha') }}
