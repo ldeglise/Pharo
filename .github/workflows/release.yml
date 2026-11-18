@@ -40,15 +40,15 @@ jobs:
 
       - name: Build binary (Windows)
         if: runner.os == 'Windows'
-        run: pyinstaller --onefile --clean --name pharo-windows main.py
+        run: pyinstaller --onefile --windowed --clean --name pharo-windows main.py
 
       - name: Build binary (Linux)
         if: runner.os == 'Linux'
-        run: pyinstaller --onefile --clean --name pharo-linux main.py
+        run: pyinstaller --onefile --windowed --clean --name pharo-linux main.py
 
       - name: Build binary (macOS)
         if: runner.os == 'macOS'
-        run: pyinstaller --onefile --clean --name pharo-macos main.py
+        run: pyinstaller --onefile --windowed --clean --name pharo-macos main.py
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
