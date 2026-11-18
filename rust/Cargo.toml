@@ -1,0 +1,11 @@
+[package]
+name = "pharo"
+version = "0.1.0"
+edition = "2021"
+description = "Portage Rust du visualiseur de phares AISM : parser, décodage normatif et diagramme temporel"
+license = "MIT"
+
+[dependencies]
+
+[profile.release]
+strip = true

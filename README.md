@@ -285,6 +285,34 @@ Pour les cadences complexes (Fl(2+1), multi-groupes), un **ATtiny85** suffit lar
 
 ---
 
+## Portage Rust
+
+Le cœur du projet (constantes normées + décodage AISM) existe aussi en Rust, dans le dossier `rust/` :
+
+```
+rust/
+├── Cargo.toml
+├── src/
+│   ├── main.rs       — CLI : décodage normatif + diagramme temporel ASCII
+│   ├── lib.rs
+│   ├── aism.rs       — Constantes normées AISM (miroir de aism.py)
+│   ├── parser.rs     — Décodage des codes AISM → séquences (miroir de parser.py)
+│   └── rendu.rs      — Annotations normatives et diagramme ASCII
+└── tests/
+    └── parser_tests.rs — Portage de la suite de tests Python
+```
+
+Le portage est vérifié bit à bit contre le parser Python : mêmes secteurs, mêmes couleurs/hex/labels, mêmes familles, mêmes périodes et mêmes séquences pas à pas sur les 15 codes d'exemple. La GUI tkinter/matplotlib n'est pas portée (le CLI affiche un diagramme ASCII à la place).
+
+```bash
+cd rust
+cargo test                      # 24 tests (portage de tests/test_parser.py)
+cargo run -- "Fl(2+1) R 15s"    # décodage normatif + diagramme ASCII
+cargo run -- "F W / Fl R 5s / Q G"   # multi-secteurs hétérogènes
+```
+
+---
+
 ## Évolutions possibles
 
 - Export de la séquence au format CSV ou JSON (pour génération de code C/Arduino directement)
