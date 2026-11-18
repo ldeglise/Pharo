@@ -21,10 +21,9 @@ class Voyant:
         self.label    = secteur["label"]
 
         # État interne
-        self._step_idx    = 0
-        self._temps_restant = self.sequence[0]["duree"] if self.sequence else 1.0
-        self._allume      = False
-        self._after_id    = None
+        self._step_idx = 0
+        self._allume   = False
+        self._after_id = None
 
         # Construction du widget
         self.frame = tk.Frame(parent, bg="#1E1E1E")

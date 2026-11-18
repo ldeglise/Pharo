@@ -6,14 +6,13 @@ matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import numpy as np
 from aism import N_CYCLES, COULEURS
 
 
 def construire_signal(sequence: list, n_cycles: int) -> tuple:
     """
     Construit les vecteurs temps/valeur pour un signal numérique en escalier.
-    Retourne (t, y) prêts pour plt.step().
+    Retourne (t, y, duree_totale) prêts pour plt.step().
     """
     t = [0.0]
     y = [0.0]
@@ -31,11 +30,6 @@ def construire_signal(sequence: list, n_cycles: int) -> tuple:
             y.append(val)
 
     return t, y, duree_totale
-
-
-def couleur_matplotlib(hex_color: str, etat: str) -> str:
-    """Retourne la couleur matplotlib selon l'état."""
-    return hex_color if etat == "on" else "#1A1A1A"
 
 
 def afficher_diagramme(frame_parent: tk.Frame, secteurs: list):

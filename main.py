@@ -1,7 +1,7 @@
 # main.py — Fenêtre principale du visualiseur de phares AISM
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk
 
 from parser import parse
 from ui.voyants import PanneauVoyants
