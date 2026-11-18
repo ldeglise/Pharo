@@ -6,6 +6,15 @@ description = "Portage Rust du visualiseur de phares AISM : parser, décodage no
 license = "MIT"
 
 [dependencies]
+iced = { version = "0.13", features = ["canvas", "smol"] }
+
+[[bin]]
+name = "pharo"
+path = "src/main.rs"
+
+[[bin]]
+name = "pharo-gui"
+path = "src/bin/gui.rs"
 
 [profile.release]
 strip = true

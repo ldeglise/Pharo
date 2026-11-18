@@ -294,6 +294,7 @@ rust/
 ├── Cargo.toml
 ├── src/
 │   ├── main.rs       — CLI : décodage normatif + diagramme temporel ASCII
+│   ├── bin/gui.rs    — GUI iced : saisie, décodage, voyants animés, diagramme
 │   ├── lib.rs
 │   ├── aism.rs       — Constantes normées AISM (miroir de aism.py)
 │   ├── parser.rs     — Décodage des codes AISM → séquences (miroir de parser.py)
@@ -302,14 +303,17 @@ rust/
     └── parser_tests.rs — Portage de la suite de tests Python
 ```
 
-Le portage est vérifié bit à bit contre le parser Python : mêmes secteurs, mêmes couleurs/hex/labels, mêmes familles, mêmes périodes et mêmes séquences pas à pas sur les 15 codes d'exemple. La GUI tkinter/matplotlib n'est pas portée (le CLI affiche un diagramme ASCII à la place).
+Le portage est vérifié bit à bit contre le parser Python : mêmes secteurs, mêmes couleurs/hex/labels, mêmes familles, mêmes périodes et mêmes séquences pas à pas sur les 15 codes d'exemple.
 
 ```bash
 cd rust
 cargo test                      # 24 tests (portage de tests/test_parser.py)
-cargo run -- "Fl(2+1) R 15s"    # décodage normatif + diagramme ASCII
+cargo run -- "Fl(2+1) R 15s"    # CLI : décodage normatif + diagramme ASCII
 cargo run -- "F W / Fl R 5s / Q G"   # multi-secteurs hétérogènes
+cargo run --bin pharo-gui       # GUI iced complète
 ```
+
+La GUI iced (`pharo-gui`) reprend l'interface tkinter : barre de saisie avec touche Entrée, liste d'exemples, voyants animés synchronisés (canvas iced + subscription 50 ms), panneau de décodage normatif scrollable et diagramme temporel multi-axes. Elle nécessite un environnement graphique (Wayland/X11).
 
 ---
 
