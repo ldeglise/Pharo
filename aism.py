@@ -11,6 +11,9 @@ SCINTILLEMENT_Q  = 50   # Quick         : 50/min  → 1.2s  par éclat
 SCINTILLEMENT_VQ = 120  # Very Quick    : 120/min → 0.5s  par éclat
 SCINTILLEMENT_UQ = 240  # Ultra Quick   : 240/min → 0.25s par éclat
 
+# Scintillement interrompu (IQ, IVQ, IUQ) : nombre d'éclats par défaut
+NB_ECLATS_IQ_DEFAUT = 6
+
 def periode_scintillement(type_q: str) -> float:
     """Retourne la période d'un éclat de scintillement en secondes."""
     mapping = {

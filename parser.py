@@ -4,7 +4,7 @@ import re
 from aism import (
     DUREE_ECLAT, DUREE_INTER_ECLAT, DUREE_INTER_GROUPE,
     DUREE_OCCULTATION, COULEURS, COULEUR_DEFAUT,
-    periode_scintillement
+    NB_ECLATS_IQ_DEFAUT, periode_scintillement
 )
 
 
@@ -17,14 +17,14 @@ def make_step(etat: str, duree: float) -> dict:
     return {"etat": etat, "duree": round(duree, 4)}
 
 
-def make_secteur(couleur: str, sequence: list, label_override: str = None, famille: str = None) -> dict:
+def make_secteur(couleur: str, sequence: list, famille: str = None) -> dict:
     """Crée un secteur avec sa couleur et sa séquence temporelle."""
     info = COULEURS.get(couleur, COULEURS[COULEUR_DEFAUT])
     return {
         "couleur":  couleur,
         "hex":      info["hex"],
         "fond":     info["fond"],
-        "label":    label_override or info["label"],
+        "label":    info["label"],
         "sequence": sequence,
         "periode":  sum(s["duree"] for s in sequence),
         "famille":  famille or "FL",
@@ -176,7 +176,7 @@ def sequence_scintillement(type_q: str, groupes: list, periode: float, interromp
 
     if interrompu and periode:
         # Groupe de scintillements + pause longue
-        nb = groupes[0] if groupes else 6
+        nb = groupes[0]
         seq = []
         duree_active = 0.0
         for i in range(nb):
@@ -217,6 +217,33 @@ def sequence_scintillement(type_q: str, groupes: list, periode: float, interromp
 # Parser d'un code simple (un seul secteur)
 # ---------------------------------------------------------------------------
 
+_TYPE_FEU_RE = re.compile(r'^(?P<interrompu>I)?(?P<type>FL|OC|ISO|VQ|UQ|Q|F)')
+
+
+def identifier_type_feu(type_raw: str):
+    """
+    Identifie la famille du feu depuis le premier token du code.
+    'FL(2+1)' → ('FL', None, False)
+    'IQ'      → ('Q', 'Q', True)
+    'VQ'      → ('Q', 'VQ', False)
+    Retourne (famille, type_q, interrompu).
+    """
+    m = _TYPE_FEU_RE.match(type_raw)
+    if not m:
+        raise ValueError(f"Type de feu non reconnu : '{type_raw}'")
+
+    interrompu = m.group("interrompu") is not None
+    type_base = m.group("type")
+
+    if interrompu and type_base not in ("Q", "VQ", "UQ"):
+        raise ValueError(f"Type de feu non reconnu : '{type_raw}'")
+
+    if type_base in ("Q", "VQ", "UQ"):
+        return "Q", type_base, interrompu
+
+    return type_base, None, interrompu
+
+
 def parse_code_simple(code: str) -> dict:
     """
     Parse un code AISM simple et retourne un dict secteur.
@@ -229,49 +256,13 @@ def parse_code_simple(code: str) -> dict:
     if not tokens:
         raise ValueError(f"Code vide : '{code}'")
 
-    # --- Détection du type de feu ---
     type_raw = tokens[0].upper()
+    famille, type_q, interrompu = identifier_type_feu(type_raw)
 
-    # Scintillement interrompu
-    interrompu = type_raw.startswith("I") and type_raw[1:] in ("Q", "VQ", "UQ")
-    if interrompu:
-        type_q = type_raw[1:]
-    else:
-        type_q = None
-
-    # Famille
-    if type_raw == "F":
-        famille = "F"
-    elif type_raw.startswith("FL") or type_raw.startswith("FL"):
-        famille = "FL"
-    elif type_raw.startswith("OC"):
-        famille = "OC"
-    elif type_raw == "ISO":
-        famille = "ISO"
-    elif interrompu or type_raw in ("IQ", "IVQ", "IUQ"):
-        famille = "Q"
-        type_q = type_raw[1:] if interrompu else type_raw
-    elif type_raw in ("Q", "VQ", "UQ"):
-        famille = "Q"
-        type_q = type_raw
-    elif re.match(r'^(FL|OC|Q|VQ|UQ|ISO|F)', type_raw):
-        # Cas avec groupes collés ex: FL(2)
-        if re.match(r'^FL', type_raw):
-            famille = "FL"
-        elif re.match(r'^OC', type_raw):
-            famille = "OC"
-        elif re.match(r'^(IQ|IVQ|IUQ)', type_raw):
-            famille = "Q"
-            interrompu = True
-            type_q = type_raw[1:]
-        else:
-            famille = "Q"
-            type_q = re.match(r'^(VQ|UQ|Q)', type_raw).group(1)
-    else:
-        raise ValueError(f"Type de feu non reconnu : '{type_raw}'")
-
-    # Groupes
+    # Groupes — scintillement interrompu sans groupe explicite : valeur par défaut
     groupes = extraire_groupes(type_raw)
+    if famille == "Q" and interrompu and "(" not in type_raw:
+        groupes = [NB_ECLATS_IQ_DEFAUT]
 
     # Période et couleurs dans les tokens suivants
     periode = extraire_periode(tokens[1:])
