@@ -41,7 +41,7 @@ jobs:
     name: Build (Linux)
     runs-on: ubuntu-latest
     container:
-      image: python:3.12-slim-bullseye
+      image: python:3.12-slim-bookworm
     steps:
       - name: Checkout
         uses: actions/checkout@v4
