@@ -49,7 +49,7 @@ jobs:
       - name: Install Tk runtime
         run: |
           apt-get update
-          apt-get install -y --no-install-recommends libtk8.6 libtcl8.6
+          apt-get install -y --no-install-recommends libtk8.6 libtcl8.6 binutils
 
       - name: Install dependencies
         run: |
